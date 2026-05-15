@@ -14,6 +14,7 @@ from pharma_news import (
     format_company_news,
     format_summary_table,
 )
+from pharma_news.demo import DEMO_NEWS
 
 COMPANY_CHOICES = list(COMPANIES.keys()) + ["all"]
 
@@ -51,6 +52,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="요약 테이블만 출력",
     )
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="샘플 데이터로 출력 형태 미리 보기 (네트워크 불필요)",
+    )
     return parser.parse_args()
 
 
@@ -79,6 +85,17 @@ def fetch_all(companies: list[dict], max_results: int) -> dict[str, list]:
 
 def main() -> None:
     args = parse_args()
+
+    if args.demo:
+        selected_names = {c["name_ko"] for c in resolve_companies(args.companies)}
+        results = {k: v for k, v in DEMO_NEWS.items() if k in selected_names} if "all" not in args.companies else DEMO_NEWS
+        print("\n[데모 모드] 샘플 데이터를 사용합니다.\n")
+        print(format_summary_table(results))
+        if not args.summary:
+            for company_name, articles in results.items():
+                print(format_company_news(company_name, articles))
+        return
+
     companies = resolve_companies(args.companies)
 
     if not companies:
